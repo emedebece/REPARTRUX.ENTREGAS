@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PAQUETRUX - Plataforma</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h2, h3 {
+      text-align: center;
+      color: #00aaff;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+    }
+    input, select {
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #00aaff;
+      color: white;
+      cursor: pointer;
+    }
+    .footer {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .hidden {
+      display: none;
+    }
+    .panel {
+      display: none;
+    }
+    .notificacion {
+      background-color: #007acc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="pantallaInicio">
+    <h2>PAQUETRUX</h2>
+    <p style="text-align: center;">¡Tus paquetes llegan Ya!</p>
+    <button onclick="mostrarLogin('negocio')">Soy un Negocio</button>
+  </div>
+
+  <!-- LOGIN NEGOCIO -->
+  <div class="container panel" id="loginNegocio">
+    <h3>Iniciar Sesión - Negocio</h3>
+    <input type="text" placeholder="Usuario" id="userNegocio">
+    <input type="password" placeholder="Contraseña" id="passNegocio">
+    <button onclick="accederNegocio()">Ingresar</button>
+  </div>
+
+  <!-- PANEL NEGOCIO -->
+  <div class="container panel" id="panelNegocio">
+    <h2>Panel de Negocio</h2>
+    <div id="notificacionesNegocio"></div>
+    <h3>Nuevo Envío</h3>
+    <input type="text" placeholder="Código de paquete">
+    <input type="number" placeholder="Valor del envío">
+    <input type="text" placeholder="Dirección de origen">
+    <input type="text" placeholder="Dirección de destino">
+    <h4>Selecciona un Repartidor:</h4>
+    <select id="selectRepartidor">
+      <!-- Lista de repartidores se cargará aquí -->
+    </select>
+    <button onclick="enviarWhatsApp()">Enviar vía WhatsApp</button>
+
+    <h3>Agenda de Repartidores</h3>
+    <input type="text" id="nombreRepartidor" placeholder="Nombre del repartidor">
+    <input type="text" id="telefonoRepartidor" placeholder="Teléfono del repartidor">
+    <button onclick="agregarRepartidor()">Agregar Repartidor</button>
+
+    <h3>Seguimiento en Tiempo Real</h3>
+    <div id="seguimientoNegocio">
+      <p>Estado actual: <strong>Pendiente</strong></p>
+    </div>
+
+    <h3>Historial de Envíos</h3>
+    <div id="orderHistory">Sin envíos aún.</div>
+    <button onclick="cerrarSesion('negocio')" style="background-color:#dc3545">Cerrar Sesión</button>
+  </div>
+
+  <script>
+    let agendaRepartidores = [];
+
+    function mostrarLogin(tipo) {
+      document.getElementById('pantallaInicio').style.display = 'none';
+      if (tipo === 'negocio') {
+        document.getElementById('loginNegocio').style.display = 'block';
+      }
+    }
+
+    function accederNegocio() {
+      document.getElementById('loginNegocio').style.display = 'none';
+      document.getElementById('panelNegocio').style.display = 'block';
+      mostrarNotificacionNegocio("Bienvenido al panel de tu negocio.");
+      cargarAgendaRepartidores();
+    }
+
+    function cerrarSesion(tipo) {
+      if (tipo === 'negocio') {
+        document.getElementById('panelNegocio').style.display = 'none';
+        document.getElementById('pantallaInicio').style.display = 'block';
+      }
+    }
+
+    function enviarWhatsApp() {
+      const codigo = document.querySelector('input[placeholder="Código de paquete"]').value;
+      const valor = document.querySelector('input[placeholder="Valor del envío"]').value;
+      const origen = document.querySelector('input[placeholder="Dirección de origen"]').value;
+      const destino = document.querySelector('input[placeholder="Dirección de destino"]').value;
+      const repartidor = document.querySelector('#selectRepartidor').value;
+      const mensaje = `Nuevo Envío:
+Código: ${codigo}
+Valor: $${valor}
+Origen: ${origen}
+Destino: ${destino}
+Repartidor: ${repartidor}`;
+
+      window.open(`https://wa.me/${repartidor}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    }
+
+    function agregarRepartidor() {
+      const nombre = document.getElementById('nombreRepartidor').value;
+      const telefono = document.getElementById('telefonoRepartidor').value;
+      if (nombre && telefono) {
+        agendaRepartidores.push({ nombre, telefono });
+        mostrarNotificacionNegocio(`Repartidor ${nombre} agregado.`);
+        cargarAgendaRepartidores();
+      }
+    }
+
+    function cargarAgendaRepartidores() {
+      const select = document.getElementById('selectRepartidor');
+      select.innerHTML = '';
+      agendaRepartidores.forEach(repartidor => {
+        const option = document.createElement('option');
+        option.value = repartidor.telefono;
+        option.textContent = `${repartidor.nombre} (${repartidor.telefono})`;
+        select.appendChild(option);
+      });
+    }
+
+    function mostrarNotificacionNegocio(mensaje) {
+      const notificaciones = document.getElementById('notificacionesNegocio');
+      const notificacion = document.createElement('div');
+      notificacion.className = 'notificacion';
+      notificacion.textContent = mensaje;
+      notificaciones.appendChild(notificacion);
+    }
+  </script>
+</body>
+</html>
